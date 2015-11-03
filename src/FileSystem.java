@@ -289,25 +289,23 @@ public class FileSystem {
         	throw new Exception();
         }
     	
-    	Node curFrom=root;
-    	for(int i=(parsedFrom.length!=0&&!parsedFrom[0].equals("")?0:1);i<parsedFrom.length;i++){
-        	if(curFrom.containsChild(parsedFrom[i])){
-        		curFrom=curFrom.getChild(parsedFrom[i]);
-        	}
-        	else{
-        		throw new Exception();
-        	}
-        }
+    	Node curFrom;
+    	try{
+    		curFrom=findNodeOnPath(parsedFrom,parsedFrom.length-1);
+    	}
+    	catch(NoSuchElementException n){
+    		System.out.println("Cannot find the SOURCE directory or file");
+    		return;
+    	}
     	
-    	Node curTo=root;
-    	for(int i=parsedTo.length!=0&&!parsedTo[0].equals("")?0:1;i<parsedTo.length-1;i++){
-        	if(curTo.containsChild(parsedTo[i])){
-        		curTo=curTo.getChild(parsedTo[i]);
-        	}
-        	else{
-        		throw new Exception();
-        	}
-        }
+    	Node curTo;
+    	try{
+    		curTo=findNodeOnPath(parsedTo,parsedTo.length-2);
+    	}
+    	catch(NoSuchElementException n){
+    		System.out.println("Cannot find the DESTINATION directory or file");
+    		return;
+    	}
     	
     	if(curTo.containsChild(parsedTo[parsedTo.length-1])){
     		curTo=curTo.getChild(parsedTo[parsedTo.length-1]);
@@ -325,7 +323,15 @@ public class FileSystem {
     		}
     	}
     	else{
-			throw new Exception();
+    		if(curTo instanceof File){
+    			System.out.println("Cannot create file or directory under a file");
+    			throw new Exception();
+    		}
+    		else{
+    			curFrom.name=parsedTo[parsedTo.length-1];
+    			curTo.addChild(curFrom);
+    			curFrom.delete();
+    		}
     	}
     	
     }
