@@ -14,9 +14,16 @@ public class FileSystem {
     		system.createDirectory("/haha");
     		system.cd("haha");
     		system.pwd();
-    		system.cd("..");
-    		system.cd("../../..");
-    		system.pwd();
+    		system.createFile("yo1","this is first file");
+    		system.createFile("yo2","this is second file");
+    		system.cd("/");
+    		system.createDirectory("/dude");
+    		system.copy("/haha/yo1", "/dude/yo1Copy");
+    		system.ls();
+            system.cd("dude");
+            system.pwd();
+            system.ls();
+            System.out.println(((File)system.curNode.getChild("yo1Copy")).content);
     	}
     	catch(Exception e){
     		System.out.println("exception");
@@ -208,55 +215,62 @@ public class FileSystem {
         }
     }
     /**
-     * In the current implementation, the parameter fromPath cannot be A Directory.
-     * If the target doesn't exist, then the method creates a new file with its name as specified by the toPath,
-     * and its content the same as the file's content indicated by fromPath.
+     * In the current implementation, the parameter fromPath can be either a directory or a file. If the fromPath is 
+     * a directory, toPath cannot be a file. 
+     * If the target doesn't exist, then the method creates a new file or directory with its name as specified by the toPath,
+     * and its content the same as the Node's content indicated by fromPath.
      * @param fromPath
      * @param toPath
      * @throws Exception
      */
     public void copy(String fromPath,String toPath) throws Exception{
+    	
+    	fromPath=simplifyPath(fromPath);
+    	toPath=simplifyPath(toPath);
+    	
     	String[] parsedFrom=fromPath.split("/");
     	String[] parsedTo=toPath.split("/");
     	if(parsedFrom==null||parsedTo==null){
         	throw new Exception();
         }
-    	Node curFrom=root;
-    	for(int i=(parsedFrom.length!=0&&!parsedFrom[0].equals("")?0:1);i<parsedFrom.length;i++){
-        	if(curFrom.containsChild(parsedFrom[i])){
-        		curFrom=curFrom.getChild(parsedFrom[i]);
-        		if(i==parsedFrom.length-1&&!(curFrom instanceof File)){
-        		    	throw new Exception();
-        		}
-        	}
-        	else{
-        		throw new Exception();
-        	}
-        }
-    	Node curTo=root;
-    	for(int i=(parsedTo.length!=0&&!parsedTo[0].equals("")?0:1);i<parsedTo.length-1;i++){
-        	if(curTo.containsChild(parsedTo[i])){
-        		curTo=curTo.getChild(parsedTo[i]);
-        	}
-        	else{
-        		throw new Exception();
-        	}
-        }
+    	
+    	Node curFrom;
+    	try{
+    		curFrom=findNodeOnPath(parsedFrom,parsedFrom.length-1);
+    	}
+    	catch(NoSuchElementException n){
+    		System.out.println("Cannot find the SOURCE directory or file");
+    		return;
+    	}
+    	
+    	Node curTo;
+    	try{
+    		curTo=findNodeOnPath(parsedTo,parsedTo.length-2);
+    	}
+    	catch(NoSuchElementException n){
+    		System.out.println("Cannot find the DESTINATION directory or file");
+    		return;
+    	}
+    	
     	if(curTo.containsChild(parsedTo[parsedTo.length-1])){
     		curTo=curTo.getChild(parsedTo[parsedTo.length-1]);
     		if(curTo instanceof Directory){
-    			curTo.addChild(new File(curFrom.name,curTo,((File)curFrom).content));
+    			curTo.addChild(curFrom.copyNode());
+    		}
+    		else if(curFrom instanceof File){
+    			((File)curTo).content=((File)curFrom).content;
     		}
     		else{
-    			((File)curTo).content=((File)curFrom).content;
+    			throw new Exception();
     		}
     	}
     	else{
     		if(curTo instanceof File){
+    			System.out.println("Cannot create file or directory under a file");
     			throw new Exception();
     		}
     		else{
-    			curTo.addChild(new File(parsedTo[parsedTo.length-1],curTo,((File)curFrom).content));
+    			curTo.addChild(curFrom.copyNode(parsedTo[parsedTo.length-1]));
     		}
     	}
     }
@@ -343,7 +357,11 @@ abstract class Node{
 		return (parentPath.equals("/")?"":parentPath)+"/"+name;
 	}
 	
-	public abstract Node copyNode() throws Exception;
+	public Node copyNode() throws Exception{
+		return copyNode(this.name);
+	}
+	
+	public abstract Node copyNode(String name) throws Exception;
 	
 	protected boolean delete(){
 		if(parent==null){
@@ -375,7 +393,7 @@ class File extends Node{
          this.content=content;
 	}
 	
-	public Node copyNode() throws Exception{
+	public Node copyNode(String name) throws Exception{
 		return new File(name,null,content);
 	}
 }
@@ -388,7 +406,7 @@ class Directory extends Node{
 		children=new HashMap<String,Node>();
 	}
 	
-	public Node copyNode() throws Exception{
+	public Node copyNode(String name) throws Exception{
 		Directory dirCopy=new Directory(name,null);
 		Set<Map.Entry<String,Node>> entrySet=children.entrySet();
 		for(Map.Entry<String,Node> entry:entrySet){
