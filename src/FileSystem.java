@@ -7,29 +7,17 @@ public class FileSystem {
     Node root;
     Node curNode;
     
-    
     public static void main(String[] args){
     	try{
-    		FileSystem system=new FileSystem();
-    		system.createDirectory("/haha");
-    		system.cd("haha");
-    		system.pwd();
-    		system.createFile("yo1","this is first file");
-    		system.createFile("yo2","this is second file");
-    		system.cd("/");
-    		system.createDirectory("/dude");
-    		system.copy("/haha/yo1", "/dude/yo1Copy");
-    		system.ls();
-            system.cd("dude");
-            system.pwd();
-            system.ls();
-            System.out.println(((File)system.curNode.getChild("yo1Copy")).content);
+			FileSystem system=new FileSystem();
+			system.mkdir("/haha");
+			system.cd("/");
+			system.pwd();
     	}
     	catch(Exception e){
-    		System.out.println("exception");
+    		
     	}
     }
-    
     
     public FileSystem() throws Exception{
     	root=new Directory("/",null);
@@ -178,7 +166,7 @@ public class FileSystem {
         }
     }
    
-    public void createFile(String path,String content) throws IllegalArgumentException,Exception{
+    public void mkfile(String path,String content) throws IllegalArgumentException,Exception{
         if(path==null){
         	throw new IllegalArgumentException();
         }
@@ -196,7 +184,8 @@ public class FileSystem {
         	throw new Exception();
         }
     }
-    public void createDirectory(String path) throws Exception{
+    
+    public void mkdir(String path) throws Exception{
     	if(path==null){
     		throw new IllegalArgumentException();
     	}
@@ -223,7 +212,7 @@ public class FileSystem {
      * @param toPath
      * @throws Exception
      */
-    public void copy(String fromPath,String toPath) throws Exception{
+    public void cp(String fromPath,String toPath) throws Exception{
     	
     	fromPath=simplifyPath(fromPath);
     	toPath=simplifyPath(toPath);
@@ -282,7 +271,7 @@ public class FileSystem {
      * @param toPath
      * @throws Exception
      */
-    public void move(String fromPath,String toPath) throws Exception{
+    public void mv(String fromPath,String toPath) throws Exception{
     	String[] parsedFrom=fromPath.split("/");
     	String[] parsedTo=toPath.split("/");
     	if(parsedFrom==null||parsedTo==null){
@@ -337,120 +326,3 @@ public class FileSystem {
     }
 }
 
-abstract class Node{
-	protected long created;
-	protected long lastUpdated;
-	protected long lastAccessed;
-	protected String name;
-	Directory parent;
-	
-	public Node(String name,Node parent) throws Exception{
-		if(parent instanceof File){
-			throw new Exception();
-		}
-		created=System.currentTimeMillis();
-		lastUpdated=System.currentTimeMillis();
-		lastAccessed=System.currentTimeMillis();
-		this.name=name;
-		this.parent=(Directory)parent;
-	}
-	
-	public String getPath(){
-		if(parent==null){
-			return "/";
-		}
-		String parentPath=parent.getPath();
-		return (parentPath.equals("/")?"":parentPath)+"/"+name;
-	}
-	
-	public Node copyNode() throws Exception{
-		return copyNode(this.name);
-	}
-	
-	public abstract Node copyNode(String name) throws Exception;
-	
-	protected boolean delete(){
-		if(parent==null){
-			return false;
-		}
-		return parent.deleteChild(this);
-	}
-	
-	protected boolean addChild(Node child){
-		return false;
-	}
-	protected boolean containsChild(String childName){
-		return false;
-	}
-	protected Node getChild(String childName){
-		return null;
-	}
-	
-	public String ls() throws Exception{
-	    throw new Exception();	
-	}
-}
-
-class File extends Node{
-	String content;
-
-	public File(String name,Node parent,String content) throws Exception{
-         super(name,parent);
-         this.content=content;
-	}
-	
-	public Node copyNode(String name) throws Exception{
-		return new File(name,null,content);
-	}
-}
-
-class Directory extends Node{
-	HashMap<String,Node> children;
-	
-	public Directory(String name,Node parent) throws Exception{
-		super(name,parent);
-		children=new HashMap<String,Node>();
-	}
-	
-	public Node copyNode(String name) throws Exception{
-		Directory dirCopy=new Directory(name,null);
-		Set<Map.Entry<String,Node>> entrySet=children.entrySet();
-		for(Map.Entry<String,Node> entry:entrySet){
-			Node childCopy=entry.getValue().copyNode();
-			dirCopy.addChild(childCopy);
-		}
-		return dirCopy;
-	}
-	
-	public String ls(){
-		Iterator<String> iter=children.keySet().iterator();
-		StringBuilder result=new StringBuilder();
-		while(iter.hasNext()){
-			result.append(iter.next()+" ");
-		}
-		return result.length()>0?result.substring(0,result.length()-1):"";
-	}
-	
-	protected boolean deleteChild(Node child){
-		return children.remove(child.name)!=null;
-	}
-	
-	protected boolean addChild(Node child){
-		if(child!=null){
-			child.parent=this;
-			children.put(child.name,child);
-			return true;
-		}
-		else{
-			return false;
-		}
-	}
-	
-	protected boolean containsChild(String childName){
-		return children.containsKey(childName);
-	}
-	
-	protected Node getChild(String childName){
-		return children.get(childName);
-	}
-}
