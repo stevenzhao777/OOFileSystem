@@ -1,6 +1,8 @@
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Scanner;
+
+
 public class FileSystemInteractive {
 	public static void main(String[] args){
 		
@@ -15,19 +17,38 @@ public class FileSystemInteractive {
 	   	 }
 	   	 
 	   	Scanner scan=new Scanner(System.in);
-	   	
+	   
 	    while(true){
 	    	
-	    	 String command=scan.nextLine();
+	    	String command;
+	    	 try{
+	    		 command=scan.nextLine();
+	    	 }
+	    	 catch(Exception e){
+	    		scan.close();
+	 	   		e.printStackTrace();
+	 	   		System.out.println("Cannot read the next line of input.");
+	 	   		return;
+	    	 }
+	    	 
 	    	 
 	    	 if(command.equals("exit")){
+	    		 scan.close();
 	    		 return;
 	    	 }
 	    	 
-	    	 String[] parsedCommand=command.split(" ");
+	    	 String[] parsedCommand=command.split("(?<!\\\\)\\s+");
+	    	 for(String s:parsedCommand){
+	    		 s=s.replaceAll("\\\\ ", " ");
+//	    		 System.out.println(s);
+	    	 }
+	    	 
+	    	 
+	    	 
+	    	 
 	    	 Class[] classArray=new Class[parsedCommand.length-1];
 	    	 Arrays.fill(classArray, command.getClass());
-	    	 
+	    	 	
 	    	 Method operation;
 	    	 try{
 	    		 operation=system.getClass().getMethod(parsedCommand[0],classArray);
@@ -48,5 +69,7 @@ public class FileSystemInteractive {
 	    	 }
 	    	 catch(Exception e){}
 	    }
-	}
+	    
+   	}
+	   	
 }

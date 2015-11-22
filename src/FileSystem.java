@@ -7,17 +7,6 @@ public class FileSystem {
     Node root;
     Node curNode;
     
-    public static void main(String[] args){
-    	try{
-			FileSystem system=new FileSystem();
-			system.mkdir("/haha");
-			system.cd("/");
-			system.pwd();
-    	}
-    	catch(Exception e){
-    		
-    	}
-    }
     
     public FileSystem() throws Exception{
     	root=new Directory("/",null);
