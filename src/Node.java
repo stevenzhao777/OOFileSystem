@@ -9,9 +9,9 @@ abstract class Node{
 	protected long lastUpdated;
 	protected long lastAccessed;
 	protected String name;
-	Directory parent;
+	protected Directory parent;
 	
-	public Node(String name,Node parent) throws Exception{
+	protected Node(String name,Node parent) throws Exception{
 		if(parent instanceof File){
 			throw new Exception();
 		}
@@ -22,7 +22,23 @@ abstract class Node{
 		this.parent=(Directory)parent;
 	}
 	
-	public String getPath(){
+	protected long getLastUpdated(){
+		return lastUpdated;
+	}
+	
+	protected void setLastUpdated(long lastUpdated){
+		this.lastUpdated=lastUpdated;
+	}
+	
+	protected long getLastAccessed(){
+		return lastAccessed;
+	}
+	
+	protected void setLastAccessed(long lastAccessed){
+		this.lastAccessed=lastAccessed;
+	}
+	
+    protected String getPath(){
 		if(parent==null){
 			return "/";
 		}
@@ -30,11 +46,11 @@ abstract class Node{
 		return (parentPath.equals("/")?"":parentPath)+"/"+name;
 	}
 	
-	public Node copyNode() throws Exception{
+	protected Node copyNode() throws Exception{
 		return copyNode(this.name);
 	}
 	
-	public abstract Node copyNode(String name) throws Exception;
+	protected abstract Node copyNode(String name) throws Exception;
 	
 	protected boolean delete(){
 		if(parent==null){
@@ -43,30 +59,44 @@ abstract class Node{
 		return parent.deleteChild(this);
 	}
 	
-	protected boolean addChild(Node child){
-		return false;
+	protected boolean addChild(Node child) throws Exception{
+		throw new UnsupportedOperationException();
 	}
-	protected boolean containsChild(String childName){
-		return false;
+	protected boolean containsChild(String childName) throws Exception{
+		throw new UnsupportedOperationException();
 	}
-	protected Node getChild(String childName){
-		return null;
+	protected Node getChild(String childName) throws Exception{
+		throw new UnsupportedOperationException();
 	}
 	
-	public String ls() throws Exception{
-	    throw new Exception();	
+	protected String ls() throws Exception{
+	    throw new UnsupportedOperationException();	
+	}
+	protected String getContent(){
+		throw new UnsupportedOperationException();
+	}
+	protected void setContent(String content){
+		throw new UnsupportedOperationException();
 	}
 }
 
 class File extends Node{
 	String content;
-
-	public File(String name,Node parent,String content) throws Exception{
+     
+	protected String getContent(){
+		return content;
+	}
+	
+	protected void setContent(String content){
+		this.content=content;
+	}
+	
+	protected File(String name,Node parent,String content) throws Exception{
          super(name,parent);
          this.content=content;
 	}
 	
-	public Node copyNode(String name) throws Exception{
+	protected Node copyNode(String name) throws Exception{
 		return new File(name,null,content);
 	}
 }
@@ -74,12 +104,12 @@ class File extends Node{
 class Directory extends Node{
 	HashMap<String,Node> children;
 	
-	public Directory(String name,Node parent) throws Exception{
+	protected Directory(String name,Node parent) throws Exception{
 		super(name,parent);
 		children=new HashMap<String,Node>();
 	}
 	
-	public Node copyNode(String name) throws Exception{
+	protected Node copyNode(String name) throws Exception{
 		Directory dirCopy=new Directory(name,null);
 		Set<Map.Entry<String,Node>> entrySet=children.entrySet();
 		for(Map.Entry<String,Node> entry:entrySet){
@@ -89,7 +119,7 @@ class Directory extends Node{
 		return dirCopy;
 	}
 	
-	public String ls(){
+	protected String ls(){
 		Iterator<String> iter=children.keySet().iterator();
 		StringBuilder result=new StringBuilder();
 		while(iter.hasNext()){

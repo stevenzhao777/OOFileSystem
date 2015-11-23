@@ -122,7 +122,6 @@ public class FileSystem {
     }
     
     
-    
     /**
      * This method is to navigate through the file system.
      * @param toDirectory
@@ -131,6 +130,7 @@ public class FileSystem {
     	if(toDirectory==null){
     		throw new IllegalArgumentException();
     	}
+    	
     	String path=simplifyPath(toDirectory);
     	Node cur=null;
     	String[] parsedPath=path.split("/");
@@ -141,18 +141,86 @@ public class FileSystem {
     		System.out.println("No such directory");
     		return;
     	}
-    	
-    	//System.out.println("cd error2");
 
         if(cur instanceof Directory){
         	curNode=cur;
-        	//System.out.println("cd error3");
-        	//System.out.println(curNode.name);
-
+        	cur.setLastAccessed(System.currentTimeMillis());
         }
         else{
         	System.out.println("Not a directory");
         }
+    }
+    
+    public void rm(String path) throws IllegalArgumentException,Exception{
+    	if(path==null){
+    	     throw new IllegalArgumentException();
+    	}
+    	
+    	path=simplifyPath(path);
+    	Node cur;
+    	String[] parsedPath=path.split("/");
+    	
+    	try{
+    		cur=findNodeOnPath(parsedPath,parsedPath.length-1);
+    		cur.delete();
+    	}
+    	catch(NoSuchElementException n){
+    		System.out.println("The specified path is invalid.");
+        	return;
+    	}
+    }
+    
+    public void readfile(String path) throws IllegalArgumentException,Exception{
+    	if(path==null){
+    		throw new IllegalArgumentException();
+    	}
+    	
+    	path=simplifyPath(path);
+    	Node cur;
+    	String[] parsedPath=path.split("/");
+    	
+    	try{
+    		cur=findNodeOnPath(parsedPath,parsedPath.length-1);
+    	}
+    	catch(NoSuchElementException n){
+    		System.out.println("The specified path is invalid.");
+        	return;
+    	}
+    	
+    	try{
+    		System.out.println(cur.getContent());
+    		cur.setLastAccessed(System.currentTimeMillis());
+    	}
+    	catch(UnsupportedOperationException u){
+    		System.out.println("Read file operation not supported for this entry");
+    	}
+    }
+    
+    public void writefile(String path,String content) throws IllegalArgumentException,Exception{
+    	if(path==null){
+    		throw new IllegalArgumentException();
+    	}
+    	
+    	path=simplifyPath(path);
+    	Node cur;
+    	String[] parsedPath=path.split("/");
+    	
+    	try{
+    		cur=findNodeOnPath(parsedPath,parsedPath.length-1);
+    	}
+    	catch(NoSuchElementException n){
+    		System.out.println("The specified path is invalid.");
+        	return;
+    	}
+    	
+    	try{
+    	    cur.setContent(content);
+    	    cur.setLastAccessed(System.currentTimeMillis());
+    	    cur.setLastUpdated(System.currentTimeMillis());
+    	}
+    	catch(UnsupportedOperationException u){
+    		System.out.println("Write file operation not supported for this entry");
+    	}
     }
    
     public void mkfile(String path,String content) throws IllegalArgumentException,Exception{
@@ -251,6 +319,10 @@ public class FileSystem {
     			curTo.addChild(curFrom.copyNode(parsedTo[parsedTo.length-1]));
     		}
     	}
+    	
+    	curFrom.setLastAccessed(System.currentTimeMillis());
+    	curTo.setLastAccessed(System.currentTimeMillis());
+    	curTo.setLastUpdated(System.currentTimeMillis());
     }
     /**
      * In this implementation, fromPath and toPath can "point to" either a File or a Directory. However, fromPath being a 
@@ -312,6 +384,9 @@ public class FileSystem {
     		}
     	}
     	
+    	curFrom.setLastAccessed(System.currentTimeMillis());
+    	curTo.setLastAccessed(System.currentTimeMillis());
+    	curTo.setLastUpdated(System.currentTimeMillis());
     }
 }
 
